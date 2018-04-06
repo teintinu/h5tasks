@@ -1,0 +1,69 @@
+{
+  "name": "@hoda5/tasks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/h5tasks.js",
+  "types": "dist/h5tasks.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "tslint --project .",
+    "lintfix": "tslint --project . --fix",
+    "test": "jest",
+    "coverage": "sensible-browser coverage/index.html",
+    "codecov": "cat coverage/coverage-final.json | npx codecov"
+  },
+  "author": "josefernandotolentino@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thr0w/h5tasks.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^22.2.2",
+    "codecov.io": "^0.1.6",
+    "jest": "^22.4.3",
+    "nyc": "^11.6.0",
+    "source-map-support": "^0.5.4",
+    "ts-jest": "^22.4.2",
+    "tslint": "^5.9.1",
+    "typescript": "^2.8.1"
+  },
+  "jest": {
+    "verbose": true,
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "roots": [
+      "src/"
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "html"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 75
+      }
+    },
+    "collectCoverageFrom": [
+      "**/*.{ts,tsx}",
+      "!**/node_modules/**",
+      "!**/vendor/**"
+    ]
+  },
+  "dependencies": {
+    "@hoda5/i18n": "^1.0.0"
+  }
+}
