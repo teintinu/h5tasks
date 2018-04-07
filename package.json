@@ -63,7 +63,5 @@
       "!**/vendor/**"
     ]
   },
-  "dependencies": {
-    "@hoda5/i18n": "^1.0.1"
-  }
+  "dependencies": {}
 }
