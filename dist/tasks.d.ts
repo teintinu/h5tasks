@@ -1,5 +1,5 @@
 export declare type Resolver<T> = (this: ITask<T>) => Promise<T>;
-export interface ITask<T> {
+export interface ITask<T> extends Promise<T> {
     readonly parent: ITask<any> | undefined;
     readonly children: Array<ITask<any>>;
     readonly name: string;
@@ -12,6 +12,11 @@ export interface ITask<T> {
     readonly failed: boolean;
     readonly reason: Error;
     readonly promise: Promise<T>;
+    was: {
+        started(): void;
+        successed(res: T | Promise<T>): void;
+        rejected(reason: Error): void;
+    };
     log(message: string, ...args: any[]): void;
     declare<C>(opts: {
         name: string;
@@ -19,12 +24,6 @@ export interface ITask<T> {
         resolver?: Resolver<C>;
         asyncDependencies?: (this: ITask<T>, res: T) => Promise<T>;
     }): ITask<C>;
-    was: {
-        started(): void;
-        successed(res: T | Promise<T>): void;
-        rejected(reason: Error): void;
-    };
-    then<R>(onfulfilled?: (res: T) => R | Promise<R>, onrejected?: (reason: Error) => R | Promise<R>): Promise<R>;
 }
 declare const Tasks: {
     debug: boolean;
@@ -37,10 +36,10 @@ declare const Tasks: {
         resolver?: Resolver<T> | undefined;
         asyncDependencies?: ((this: ITask<T>, res: T) => Promise<void>) | undefined;
     }): ITask<T>;
-    on: {
+    off: {
         error(callback: (err: Error) => void): void;
     };
-    off: {
+    on: {
         error(callback: (err: Error) => void): void;
     };
     log(message: string, ...args: any[]): void;

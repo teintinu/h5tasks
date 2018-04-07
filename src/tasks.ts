@@ -1,7 +1,9 @@
 
+// tslint:disable:object-literal-sort-keys
+// tslint:disable:only-arrow-functions
 export type Resolver<T> = (this: ITask<T>) => Promise<T>;
 
-export interface ITask<T> {
+export interface ITask<T> extends Promise<T> {
     readonly parent: ITask<any> | undefined;
     readonly children: Array<ITask<any>>;
     readonly name: string;
@@ -26,7 +28,6 @@ export interface ITask<T> {
         resolver?: Resolver<C>,
         asyncDependencies?: (this: ITask<T>, res: T) => Promise<T>,
     }): ITask<C>;
-    then<R>(onfulfilled?: (res: T) => R | Promise<R>, onrejected?: (reason: Error) => R | Promise<R>): Promise<R>;
 }
 
 const Tasks = {
@@ -103,6 +104,7 @@ function internalTask<T>(opts: {
       2 - success
       3 - error
     */
+
     let lState: 0 | 1 | 2 | 3 = 0;
     let sReason: Error;
     let lProgress: number;
@@ -111,94 +113,6 @@ function internalTask<T>(opts: {
     let tryReject: (reason: Error) => void;
     const lChildren: Array<ITask<any>> = [];
     let lPromise: Promise<T>;
-    const self: ITask<T> = {
-        get parent() {
-            return opts.parent;
-        },
-        get children() {
-            return [...lChildren];
-        },
-        get name() {
-            return opts.name;
-        },
-        get fullname() {
-            if (opts.parent) {
-                return [opts.parent.fullname, opts.name].join("/");
-            }
-            return opts.name;
-        },
-        get progress() {
-            return lProgress;
-        },
-        set progress(value) {
-            lProgress = value;
-        },
-        get ETF() {
-            return new Date(new Date().getTime() + 1);
-        },
-        get running() {
-            return lState === 1;
-        },
-        get pending() {
-            return lState < 2;
-        },
-        get success() {
-            return lState === 2;
-        },
-        get failed() {
-            return lState === 3;
-        },
-        get reason() {
-            return sReason;
-        },
-        get promise() {
-            return lPromise;
-        },
-        log(message: string, ...args: any[]) {
-            log(self, message, ...args);
-        },
-        declare<C>(cOpts: {
-            name: string,
-            count?: number,
-            resolver?: Resolver<C>,
-            asyncDependencies?: (this: ITask<T>, res: T) => Promise<T>,
-        }): ITask<C> {
-            const chield: ITask<C> = internalTask<C>({
-                name: cOpts.name,
-                parent: self,
-                resolver: cOpts.resolver,
-            });
-            lChildren.push(chield);
-            return chield;
-        },
-        was: {
-            started(): void {
-                if (lState !== 0) { throw new Error("Can' restart"); }
-                lState = 1;
-                if (opts.parent && (!opts.parent.running)) {
-                    opts.parent.was.started();
-                }
-                if (Tasks.debug) { log(self, "started"); }
-            },
-            successed(res: T | Promise<T>): void {
-                if (lState === 3) { throw new Error("was failed"); }
-                if (typeof res === "object" && res instanceof Promise) {
-                    res.then(self.was.successed, self.was.rejected);
-                } else {
-                    tryResolve(res);
-                    if (Tasks.debug) { log(self, "successed", JSON.stringify(res)); }
-                }
-            },
-            rejected(reason: Error): void {
-                tryReject(reason);
-                if (Tasks.debug) { log(self, "rejected", reason); }
-            },
-        },
-        then(onfulfilled, onrejected) {
-            return lPromise.then(onfulfilled, onrejected);
-        },
-    };
-    if (Tasks.debug) { log(self, "declared"); }
     lPromise = new Promise(
         (promResolve, promReject) => {
             lStartedAt = new Date();
@@ -214,7 +128,7 @@ function internalTask<T>(opts: {
                 for (const c of lChildren) {
                     if (c.success) { rChildrenSuccess++; } else if (c.failed) {
                         rReason = rReason || c.reason;
-                    } else { rChildrenPending.push(c.promise); }
+                    } else { rChildrenPending.push(c); }
                 }
                 // if (Tasks.debug)
                 //     log(self, JSON.stringify({
@@ -259,6 +173,114 @@ function internalTask<T>(opts: {
                 });
             }
         });
+
+    const self: ITask<T> = lPromise as any;
+
+    Object.defineProperties(self, {
+        parent: {
+            get() {
+                return opts.parent;
+            },
+        },
+        children: {
+            get() {
+                return [...lChildren];
+            },
+        },
+        name: {
+            get() {
+                return opts.name;
+            },
+        },
+        fullname: {
+            get() {
+                if (opts.parent) {
+                    return [opts.parent.fullname, opts.name].join("/");
+                }
+                return opts.name;
+            },
+        },
+        progress: {
+            get() {
+                return lProgress;
+            },
+            set(value) {
+                lProgress = value;
+            },
+        },
+        ETF: {
+            get() {
+                return new Date(new Date().getTime() + 1);
+            },
+        },
+        running: {
+            get() {
+                return lState === 1;
+            },
+        },
+        pending: {
+            get() {
+                return lState < 2;
+            },
+        },
+        success: {
+            get() {
+                return lState === 2;
+            },
+        },
+        failed: {
+            get() {
+                return lState === 3;
+            },
+        },
+        reason: {
+            get() {
+                return sReason;
+            },
+        },
+    });
+
+    self.log = function self_log(message: string, ...args: any[]) {
+        log(self, message, ...args);
+    };
+    self.declare = function self_declare<C>(cOpts: {
+        name: string,
+        count?: number,
+        resolver?: Resolver<C>,
+        asyncDependencies?: (this: ITask<T>, res: T) => Promise<T>,
+    }): ITask<C> {
+        const chield: ITask<C> = internalTask<C>({
+            name: cOpts.name,
+            parent: self,
+            resolver: cOpts.resolver,
+        });
+        lChildren.push(chield);
+        return chield;
+    };
+    self.was = {
+        started(): void {
+            if (lState !== 0) { throw new Error("Can' restart"); }
+            lState = 1;
+            if (opts.parent && (!opts.parent.running)) {
+                opts.parent.was.started();
+            }
+            if (Tasks.debug) { log(self, "started"); }
+        },
+        successed(res: T | Promise<T>): void {
+            if (lState === 3) { throw new Error("was failed"); }
+            if (typeof res === "object" && res instanceof Promise) {
+                res.then(self.was.successed, self.was.rejected);
+            } else {
+                tryResolve(res);
+                if (Tasks.debug) { log(self, "successed", JSON.stringify(res)); }
+            }
+        },
+        rejected(reason: Error): void {
+            tryReject(reason);
+            if (Tasks.debug) { log(self, "rejected", reason); }
+        },
+    };
+    if (Tasks.debug) { log(self, "declared"); }
     return self;
 }
 

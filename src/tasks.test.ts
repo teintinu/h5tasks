@@ -7,11 +7,9 @@ describe("task - simple ", () => {
     Tasks.reset();
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
     Tasks.log("log1", "arg");
-    let self;
     const task = Tasks.declare({
       name: "simple",
-      async resolver() {
-        self = this;
+      resolver: async () => {
         return "ok";
       },
     });
@@ -265,8 +263,8 @@ describe("task - simple ", () => {
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
     const task = Tasks.declare({
       name: "simple",
-      async resolver() {
-        return new Promise((resolve) => resolve("ok"));
+      resolver: async () => {
+        return new Promise<string>((resolve) => resolve("ok"));
       },
     });
     expect({
@@ -307,13 +305,13 @@ describe("task - 1 chield ", () => {
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
     const task = Tasks.declare({
       name: "parent",
-      async resolver() {
+      resolver: async () => {
         return "ok1";
       },
     });
     const chield = task.declare({
       name: "chield",
-      async resolver() {
+      resolver: async () => {
         return "ok2";
       },
     });
@@ -401,14 +399,14 @@ describe("task - 2 children ", () => {
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
     const task = Tasks.declare({
       name: "parent",
-      async resolver() {
+      resolver: async () => {
         return "ok1";
       },
     });
     const chield1 = task.declare({
       name: "chield1",
-      async resolver() {
-        return new Promise((resolve) => setTimeout(() => resolve("ok2"), 100));
+      resolver: async () => {
+        return new Promise<string>((resolve) => setTimeout(() => resolve("ok2"), 100));
       },
     });
     const chield2 = task.declare({

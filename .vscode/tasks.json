@@ -6,7 +6,16 @@
         {
             "type": "npm",
             "script": "lintfix",
-            "problemMatcher": []
+            "problemMatcher": [
+                "$tslint5"
+            ]
+        },
+        {
+            "type": "npm",
+            "script": "build",
+            "problemMatcher": [
+                "$tsc"
+            ]
         }
     ]
 }

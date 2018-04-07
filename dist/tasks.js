@@ -68,30 +68,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Tasks = {
     debug: false,
     reset: function () {
-        _tasks = [];
-        _on.error = [];
+        rootTasks = [];
+        events.error = [];
     },
     get list() {
-        return __spread(_tasks);
+        return __spread(rootTasks);
     },
     declare: function (opts) {
         var j = internalTask(opts);
-        _tasks.push(j);
+        rootTasks.push(j);
         return j;
-    },
-    on: {
-        error: function (callback) {
-            var i = _on.error.indexOf(callback);
-            if (i === -1) {
-                _on.error.push(callback);
-            }
-        },
     },
     off: {
         error: function (callback) {
-            var i = _on.error.indexOf(callback);
+            var i = events.error.indexOf(callback);
             if (i > -1) {
-                _on.error.splice(i, 1);
+                events.error.splice(i, 1);
+            }
+        },
+    },
+    on: {
+        error: function (callback) {
+            var i = events.error.indexOf(callback);
+            if (i === -1) {
+                events.error.push(callback);
             }
         },
     },
@@ -116,8 +116,8 @@ var Tasks = {
     },
 };
 exports.default = Tasks;
-var _tasks = [];
-var _on = {
+var rootTasks = [];
+var events = {
     error: [],
 };
 function dispatch(event) {
@@ -125,7 +125,7 @@ function dispatch(event) {
     for (var _i = 1; _i < arguments.length; _i++) {
         args[_i - 1] = arguments[_i];
     }
-    _on[event].forEach(function (callback) {
+    events[event].forEach(function (callback) {
         return Tasks.asap(function () { return callback.apply(void 0, __spread(args)); });
     });
 }
@@ -139,178 +139,84 @@ function internalTask(opts) {
       2 - success
       3 - error
     */
-    var _state = 0;
-    var _reason;
-    var _progress;
-    var _startedAt;
-    var _tryResolve;
-    var _tryReject;
-    var _children = [];
-    var _promise;
-    var self = {
-        get parent() {
-            return opts.parent;
-        },
-        get children() {
-            return __spread(_children);
-        },
-        get name() {
-            return opts.name;
-        },
-        get fullname() {
-            if (opts.parent) {
-                return [opts.parent.fullname, opts.name].join("/");
-            }
-            return opts.name;
-        },
-        get progress() {
-            return _progress;
-        },
-        set progress(value) {
-            _progress = value;
-        },
-        get ETF() {
-            return new Date(new Date().getTime() + 1);
-        },
-        get running() {
-            return _state === 1;
-        },
-        get pending() {
-            return _state < 2;
-        },
-        get success() {
-            return _state === 2;
-        },
-        get failed() {
-            return _state === 3;
-        },
-        get reason() {
-            return _reason;
-        },
-        get promise() {
-            return _promise;
-        },
-        log: function (message) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            log.apply(void 0, __spread([self, message], args));
-        },
-        declare: function (opts) {
-            var chield = internalTask({
-                parent: self,
-                name: opts.name,
-                resolver: opts.resolver,
-            });
-            _children.push(chield);
-            return chield;
-        },
-        was: {
-            started: function () {
-                if (_state !== 0) {
-                    throw new Error("Can' restart");
-                }
-                _state = 1;
-                if (opts.parent && (!opts.parent.running)) {
-                    opts.parent.was.started();
-                }
-                if (Tasks.debug) {
-                    log(self, "started");
-                }
-            },
-            successed: function (res) {
-                if (_state === 3) {
-                    throw new Error("was failed");
-                }
-                if (typeof res === "object" && res instanceof Promise) {
-                    res.then(self.was.successed, self.was.rejected);
-                }
-                else {
-                    _tryResolve(res);
-                    if (Tasks.debug) {
-                        log(self, "successed", JSON.stringify(res));
-                    }
-                }
-            },
-            rejected: function (reason) {
-                _tryReject(reason);
-                if (Tasks.debug) {
-                    log(self, "rejected", reason);
-                }
-            },
-        },
-        then: function (onfulfilled, onrejected) {
-            return _promise.then(onfulfilled, onrejected);
-        },
-    };
-    if (Tasks.debug) {
-        log(self, "declared");
-    }
-    _promise = new Promise(function (promResolve, promReject) {
-        _tryResolve = function (res, noAsyncDeps) {
-            if (_state > 1) {
+    var lState = 0;
+    var sReason;
+    var lProgress;
+    var lStartedAt;
+    var tryResolve;
+    var tryReject;
+    var lChildren = [];
+    var lPromise;
+    lPromise = new Promise(function (promResolve, promReject) {
+        lStartedAt = new Date();
+        tryResolve = function (res, noAsyncDeps) {
+            if (lState > 1) {
                 return;
             }
             if (typeof res === "object" && res instanceof Promise) {
-                res.then(_tryResolve, _tryReject);
+                res.then(tryResolve, tryReject);
                 return;
             }
-            var _childrenSuccess = 0;
-            var _reason;
-            var _childrenPending = [];
+            var rChildrenSuccess = 0;
+            var rReason;
+            var rChildrenPending = [];
             try {
-                for (var _children_1 = __values(_children), _children_1_1 = _children_1.next(); !_children_1_1.done; _children_1_1 = _children_1.next()) {
-                    var c = _children_1_1.value;
+                for (var lChildren_1 = __values(lChildren), lChildren_1_1 = lChildren_1.next(); !lChildren_1_1.done; lChildren_1_1 = lChildren_1.next()) {
+                    var c = lChildren_1_1.value;
                     if (c.success) {
-                        _childrenSuccess++;
+                        rChildrenSuccess++;
                     }
                     else if (c.failed) {
-                        _reason = _reason || c.reason;
+                        rReason = rReason || c.reason;
                     }
                     else {
-                        _childrenPending.push(c.promise);
+                        rChildrenPending.push(c);
                     }
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_children_1_1 && !_children_1_1.done && (_a = _children_1.return)) _a.call(_children_1);
+                    if (lChildren_1_1 && !lChildren_1_1.done && (_a = lChildren_1.return)) _a.call(lChildren_1);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
             // if (Tasks.debug)
-            //     log(self, JSON.stringify({ l: _children.length, _childrenSuccess, _childrenFailed, _childrenPending }))
-            if (_childrenPending.length === 0) {
-                if (_reason) {
-                    _tryReject(_reason);
+            //     log(self, JSON.stringify({
+            //         l: _children.length,
+            //         _childrenSuccess,
+            //         _childrenFailed,
+            //         _childrenPending
+            //     }))
+            if (rChildrenPending.length === 0) {
+                if (rReason) {
+                    tryReject(rReason);
                 }
-                else if (_state !== 3) {
+                else if (lState !== 3) {
                     if (opts.asyncDependencies && !noAsyncDeps) {
                         opts.asyncDependencies.call(self, res)
-                            .then(function () { return _tryResolve(res, true); }, _tryReject);
+                            .then(function () { return tryResolve(res, true); }, tryReject);
                     }
                     else {
-                        _state = 2;
+                        lState = 2;
                         promResolve(res);
                     }
                 }
             }
             else {
-                Promise.all(_childrenPending)
-                    .then(function () { return _tryResolve(res); }, _tryReject);
+                Promise.all(rChildrenPending)
+                    .then(function () { return tryResolve(res); }, tryReject);
             }
             var e_1, _a;
         };
-        _tryReject = function (reason) {
-            if (_state === 3) {
+        tryReject = function (reason) {
+            if (lState === 3) {
                 return;
             }
-            _state = 3;
-            _reason = reason;
-            promReject(_reason);
-            dispatch_error(_reason);
+            lState = 3;
+            sReason = reason;
+            promReject(sReason);
+            dispatch_error(sReason);
         };
         if (opts.resolver) {
             Tasks.asap(function () {
@@ -327,6 +233,123 @@ function internalTask(opts) {
             });
         }
     });
+    var self = lPromise;
+    Object.defineProperties(self, {
+        parent: {
+            get: function () {
+                return opts.parent;
+            },
+        },
+        children: {
+            get: function () {
+                return __spread(lChildren);
+            },
+        },
+        name: {
+            get: function () {
+                return opts.name;
+            },
+        },
+        fullname: {
+            get: function () {
+                if (opts.parent) {
+                    return [opts.parent.fullname, opts.name].join("/");
+                }
+                return opts.name;
+            },
+        },
+        progress: {
+            get: function () {
+                return lProgress;
+            },
+            set: function (value) {
+                lProgress = value;
+            },
+        },
+        ETF: {
+            get: function () {
+                return new Date(new Date().getTime() + 1);
+            },
+        },
+        running: {
+            get: function () {
+                return lState === 1;
+            },
+        },
+        pending: {
+            get: function () {
+                return lState < 2;
+            },
+        },
+        success: {
+            get: function () {
+                return lState === 2;
+            },
+        },
+        failed: {
+            get: function () {
+                return lState === 3;
+            },
+        },
+        reason: {
+            get: function () {
+                return sReason;
+            },
+        },
+    });
+    self.log = function self_log(message) {
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
+        }
+        log.apply(void 0, __spread([self, message], args));
+    };
+    self.declare = function self_declare(cOpts) {
+        var chield = internalTask({
+            name: cOpts.name,
+            parent: self,
+            resolver: cOpts.resolver,
+        });
+        lChildren.push(chield);
+        return chield;
+    };
+    self.was = {
+        started: function () {
+            if (lState !== 0) {
+                throw new Error("Can' restart");
+            }
+            lState = 1;
+            if (opts.parent && (!opts.parent.running)) {
+                opts.parent.was.started();
+            }
+            if (Tasks.debug) {
+                log(self, "started");
+            }
+        },
+        successed: function (res) {
+            if (lState === 3) {
+                throw new Error("was failed");
+            }
+            if (typeof res === "object" && res instanceof Promise) {
+                res.then(self.was.successed, self.was.rejected);
+            }
+            else {
+                tryResolve(res);
+                if (Tasks.debug) {
+                    log(self, "successed", JSON.stringify(res));
+                }
+            }
+        },
+        rejected: function (reason) {
+            tryReject(reason);
+            if (Tasks.debug) {
+                log(self, "rejected", reason);
+            }
+        },
+    };
+    if (Tasks.debug) {
+        log(self, "declared");
+    }
     return self;
 }
 function log(task, msg) {
@@ -335,10 +358,11 @@ function log(task, msg) {
         args[_i - 2] = arguments[_i];
     }
     if (task) {
+        // tslint:disable:no-console
         console.log(__spread([task.fullname, msg], args).join(" "));
     }
     else {
-        //tslint:disable:no-console
+        // tslint:disable:no-console
         console.log(__spread([msg], args).join(" "));
     }
 }
