@@ -4,7 +4,7 @@ describe('task - simple ', () => {
   it('task - simple', async () => {
     Tasks.reset();
     expect({ 'antes': Tasks.list.length }).toEqual({ antes: 0 });
-
+    Tasks.log('log1', 'arg')
     let self;
     const task = Tasks.declare({
       name: 'simple',
@@ -13,14 +13,21 @@ describe('task - simple ', () => {
         return 'ok'
       }
     })
+    task.log('log2', 'arg')
     expect({
       depois1: Tasks.list.length,
+      parent: task.parent,
+      name: task.name,
+      fullname: task.fullname,
       pending: Tasks.list[0].pending,
       running: Tasks.list[0].running,
       success: Tasks.list[0].success,
       failed: Tasks.list[0].failed,
     }).toEqual({
       depois1: 1,
+      parent: undefined,
+      name: 'simple',
+      fullname: 'simple',
       pending: true,
       running: false,
       success: false,
@@ -97,6 +104,7 @@ describe('task - simple ', () => {
     let erros_capturados = 0;
     Tasks.reset();
     Tasks.on.error(captura_erro)
+    Tasks.on.error(captura_erro)
 
     expect({ antes1: Tasks.list.length }).toEqual({ antes1: 0 });
     const task1 = Tasks.declare({
@@ -146,6 +154,7 @@ describe('task - simple ', () => {
       failed: true,
     })
 
+    Tasks.off.error(captura_erro)
     Tasks.off.error(captura_erro)
 
     expect({ antes2: Tasks.list.length }).toEqual({ antes2: 1 });
@@ -356,6 +365,9 @@ describe('task - 1 chield ', () => {
         failed: Tasks.list[0].failed,
       },
       chield: {
+        parent: chield.parent && chield.parent.name,
+        name: chield.name,
+        fullname: chield.fullname,
         pending: task.children[0].pending,
         running: task.children[0].running,
         success: task.children[0].success,
@@ -373,6 +385,9 @@ describe('task - 1 chield ', () => {
         failed: false,
       },
       chield: {
+        parent: 'parent',
+        name: 'chield',
+        fullname: 'parent/chield',
         pending: false,
         running: false,
         success: true,
