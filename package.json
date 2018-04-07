@@ -1,9 +1,9 @@
 {
   "name": "@hoda5/tasks",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/h5tasks.js",
-  "types": "dist/h5tasks.d.ts",
+  "version": "1.0.1",
+  "description": "UI tasks",
+  "main": "dist/tasks.js",
+  "types": "dist/tasks.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "tslint  -t verbose  --project .",
