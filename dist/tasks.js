@@ -82,16 +82,18 @@ var Tasks = {
     on: {
         error: function (callback) {
             var i = _on.error.indexOf(callback);
-            if (i === -1)
+            if (i === -1) {
                 _on.error.push(callback);
-        }
+            }
+        },
     },
     off: {
         error: function (callback) {
             var i = _on.error.indexOf(callback);
-            if (i > -1)
+            if (i > -1) {
                 _on.error.splice(i, 1);
-        }
+            }
+        },
     },
     log: function (message) {
         var args = [];
@@ -128,7 +130,7 @@ function dispatch(event) {
     });
 }
 function dispatch_error(err) {
-    dispatch('error', err);
+    dispatch("error", err);
 }
 function internalTask(opts) {
     /*
@@ -156,8 +158,9 @@ function internalTask(opts) {
             return opts.name;
         },
         get fullname() {
-            if (opts.parent)
-                return [opts.parent.fullname, opts.name].join('/');
+            if (opts.parent) {
+                return [opts.parent.fullname, opts.name].join("/");
+            }
             return opts.name;
         },
         get progress() {
@@ -205,42 +208,51 @@ function internalTask(opts) {
         },
         was: {
             started: function () {
-                if (_state !== 0)
-                    throw new Error('Can\' restart');
+                if (_state !== 0) {
+                    throw new Error("Can' restart");
+                }
                 _state = 1;
-                if (opts.parent && (!opts.parent.running))
+                if (opts.parent && (!opts.parent.running)) {
                     opts.parent.was.started();
-                if (Tasks.debug)
-                    log(self, 'started');
+                }
+                if (Tasks.debug) {
+                    log(self, "started");
+                }
             },
             successed: function (res) {
-                if (_state === 3)
-                    throw new Error('was failed');
-                if (typeof res === 'object' && res instanceof Promise)
+                if (_state === 3) {
+                    throw new Error("was failed");
+                }
+                if (typeof res === "object" && res instanceof Promise) {
                     res.then(self.was.successed, self.was.rejected);
+                }
                 else {
                     _tryResolve(res);
-                    if (Tasks.debug)
-                        log(self, 'successed', JSON.stringify(res));
+                    if (Tasks.debug) {
+                        log(self, "successed", JSON.stringify(res));
+                    }
                 }
             },
             rejected: function (reason) {
                 _tryReject(reason);
-                if (Tasks.debug)
-                    log(self, 'rejected', reason);
+                if (Tasks.debug) {
+                    log(self, "rejected", reason);
+                }
             },
         },
         then: function (onfulfilled, onrejected) {
             return _promise.then(onfulfilled, onrejected);
         },
     };
-    if (Tasks.debug)
-        log(self, 'declared');
+    if (Tasks.debug) {
+        log(self, "declared");
+    }
     _promise = new Promise(function (promResolve, promReject) {
         _tryResolve = function (res, noAsyncDeps) {
-            if (_state > 1)
+            if (_state > 1) {
                 return;
-            if (typeof res === 'object' && res instanceof Promise) {
+            }
+            if (typeof res === "object" && res instanceof Promise) {
                 res.then(_tryResolve, _tryReject);
                 return;
             }
@@ -250,13 +262,15 @@ function internalTask(opts) {
             try {
                 for (var _children_1 = __values(_children), _children_1_1 = _children_1.next(); !_children_1_1.done; _children_1_1 = _children_1.next()) {
                     var c = _children_1_1.value;
-                    if (c.success)
+                    if (c.success) {
                         _childrenSuccess++;
+                    }
                     else if (c.failed) {
                         _reason = _reason || c.reason;
                     }
-                    else
+                    else {
                         _childrenPending.push(c.promise);
+                    }
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -269,8 +283,9 @@ function internalTask(opts) {
             // if (Tasks.debug)
             //     log(self, JSON.stringify({ l: _children.length, _childrenSuccess, _childrenFailed, _childrenPending }))
             if (_childrenPending.length === 0) {
-                if (_reason)
+                if (_reason) {
                     _tryReject(_reason);
+                }
                 else if (_state !== 3) {
                     if (opts.asyncDependencies && !noAsyncDeps) {
                         opts.asyncDependencies.call(self, res)
@@ -282,14 +297,16 @@ function internalTask(opts) {
                     }
                 }
             }
-            else
+            else {
                 Promise.all(_childrenPending)
                     .then(function () { return _tryResolve(res); }, _tryReject);
+            }
             var e_1, _a;
         };
         _tryReject = function (reason) {
-            if (_state === 3)
+            if (_state === 3) {
                 return;
+            }
             _state = 3;
             _reason = reason;
             promReject(_reason);
@@ -297,7 +314,7 @@ function internalTask(opts) {
         };
         if (opts.resolver) {
             Tasks.asap(function () {
-                if (opts.resolver)
+                if (opts.resolver) {
                     try {
                         self.was.started();
                         var res = opts.resolver.call(self);
@@ -306,6 +323,7 @@ function internalTask(opts) {
                     catch (e) {
                         self.was.rejected(e);
                     }
+                }
             });
         }
     });
@@ -316,9 +334,12 @@ function log(task, msg) {
     for (var _i = 2; _i < arguments.length; _i++) {
         args[_i - 2] = arguments[_i];
     }
-    if (task)
-        console.log(__spread([task.fullname, msg], args).join(' '));
-    else
-        console.log(__spread([msg], args).join(' '));
+    if (task) {
+        console.log(__spread([task.fullname, msg], args).join(" "));
+    }
+    else {
+        //tslint:disable:no-console
+        console.log(__spread([msg], args).join(" "));
+    }
 }
 //# sourceMappingURL=tasks.js.map

@@ -1,7 +1,7 @@
 export declare type Resolver<T> = (this: ITask<T>) => Promise<T>;
 export interface ITask<T> {
     readonly parent: ITask<any> | undefined;
-    readonly children: ITask<any>[];
+    readonly children: Array<ITask<any>>;
     readonly name: string;
     readonly fullname: string;
     progress: number;
