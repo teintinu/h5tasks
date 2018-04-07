@@ -1,4 +1,5 @@
 export declare type Resolver<T> = (this: ITask<T>) => Promise<T>;
+export declare type AsyncDependencies<T> = (this: ITask<T>, res: T) => Promise<void>;
 export interface ITask<T> extends Promise<T> {
     readonly parent: ITask<any> | undefined;
     readonly children: Array<ITask<any>>;
@@ -22,7 +23,7 @@ export interface ITask<T> extends Promise<T> {
         name: string;
         count?: number;
         resolver?: Resolver<C>;
-        asyncDependencies?: (this: ITask<T>, res: T) => Promise<T>;
+        asyncDependencies?: AsyncDependencies<T>;
     }): ITask<C>;
 }
 declare const Tasks: {
@@ -34,7 +35,7 @@ declare const Tasks: {
         count?: number | undefined;
         parent?: ITask<any> | undefined;
         resolver?: Resolver<T> | undefined;
-        asyncDependencies?: ((this: ITask<T>, res: T) => Promise<void>) | undefined;
+        asyncDependencies?: AsyncDependencies<T> | undefined;
     }): ITask<T>;
     off: {
         error(callback: (err: Error) => void): void;

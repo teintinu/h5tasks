@@ -2,6 +2,7 @@
 // tslint:disable:object-literal-sort-keys
 // tslint:disable:only-arrow-functions
 export type Resolver<T> = (this: ITask<T>) => Promise<T>;
+export type AsyncDependencies<T> = (this: ITask<T>, res: T) => Promise<void>;
 
 export interface ITask<T> extends Promise<T> {
     readonly parent: ITask<any> | undefined;
@@ -26,7 +27,7 @@ export interface ITask<T> extends Promise<T> {
         name: string,
         count?: number,
         resolver?: Resolver<C>,
-        asyncDependencies?: (this: ITask<T>, res: T) => Promise<T>,
+        asyncDependencies?: AsyncDependencies<T>,
     }): ITask<C>;
 }
 
@@ -44,7 +45,7 @@ const Tasks = {
         count?: number,
         parent?: ITask<any>,
         resolver?: Resolver<T>,
-        asyncDependencies?: (this: ITask<T>, res: T) => Promise<void>,
+        asyncDependencies?: AsyncDependencies<T>,
     }): ITask<T> {
         const j = internalTask(opts);
         rootTasks.push(j);
@@ -96,7 +97,7 @@ function internalTask<T>(opts: {
     parent?: ITask<any>,
     count?: number,
     resolver?: Resolver<T>,
-    asyncDependencies?: (this: ITask<T>, res: T) => Promise<void>,
+    asyncDependencies?: AsyncDependencies<T>,
 }): ITask<T> {
     /*
       0 - declared
@@ -247,7 +248,7 @@ function internalTask<T>(opts: {
         name: string,
         count?: number,
         resolver?: Resolver<C>,
-        asyncDependencies?: (this: ITask<T>, res: T) => Promise<T>,
+        asyncDependencies?: AsyncDependencies<T>,
     }): ITask<C> {
         const chield: ITask<C> = internalTask<C>({
             name: cOpts.name,
