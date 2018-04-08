@@ -97,6 +97,50 @@ describe("task - simple ", () => {
       failed: true,
     });
   });
+  it("task - simple error", async () => {
+    Tasks.reset();
+    expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
+    const task = Tasks.declare({
+      name: "simple",
+    });
+    expect({
+      depois1: Tasks.list.length,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      depois1: 1,
+      pending: true,
+      running: false,
+      success: false,
+      failed: false,
+    });
+    task.error("fail");
+    let sucesso = false;
+    try {
+      await task.then();
+      sucesso = true;
+    } catch (e) {
+      expect({ message: Tasks.list[0].reason.message })
+        .toEqual({ message: e.message });
+    }
+    expect({
+      sucesso,
+      depois2: Tasks.list.length,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      sucesso: false,
+      depois2: 1,
+      pending: false,
+      running: false,
+      success: false,
+      failed: true,
+    });
+  });
 
   it("task - simple throw with capture", async () => {
     let errosCapturados = 0;

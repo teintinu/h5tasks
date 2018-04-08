@@ -12,7 +12,6 @@ export interface ITask<T> extends Promise<T> {
     readonly success: boolean;
     readonly failed: boolean;
     readonly reason: Error;
-    readonly promise: Promise<T>;
     was: {
         started(): void;
         successed(res: T | Promise<T>): void;
@@ -25,6 +24,7 @@ export interface ITask<T> extends Promise<T> {
         resolver?: Resolver<C>;
         asyncDependencies?: AsyncDependencies<T>;
     }): ITask<C>;
+    error(msg: string): Error;
 }
 declare const Tasks: {
     debug: boolean;
@@ -46,5 +46,6 @@ declare const Tasks: {
     log(message: string, ...args: any[]): void;
     asap(callback: () => void): void;
     delay(tm: number): Promise<{}>;
+    error(task: ITask<any> | undefined, msg: string): Error;
 };
 export default Tasks;

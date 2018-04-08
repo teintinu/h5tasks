@@ -114,6 +114,13 @@ var Tasks = {
             });
         });
     },
+    error: function (task, msg) {
+        var err = new Error(msg);
+        if (task) {
+            task.was.rejected(err);
+        }
+        return err;
+    },
 };
 exports.default = Tasks;
 var rootTasks = [];
@@ -347,6 +354,7 @@ function internalTask(opts) {
             }
         },
     };
+    self.error = function (msg) { return Tasks.error(self, msg); };
     if (Tasks.debug) {
         log(self, "declared");
     }

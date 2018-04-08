@@ -16,7 +16,6 @@ export interface ITask<T> extends Promise<T> {
     readonly success: boolean;
     readonly failed: boolean;
     readonly reason: Error;
-    readonly promise: Promise<T>;
     was: {
         started(): void,
         successed(res: T | Promise<T>): void,
@@ -29,6 +28,7 @@ export interface ITask<T> extends Promise<T> {
         resolver?: Resolver<C>,
         asyncDependencies?: AsyncDependencies<T>,
     }): ITask<C>;
+    error(msg: string): Error;
 }
 
 const Tasks = {
@@ -73,6 +73,13 @@ const Tasks = {
         return new Promise((resolve) =>
             setTimeout(() => resolve(), tm),
         );
+    },
+    error(task: ITask<any> | undefined, msg: string) {
+        const err = new Error(msg);
+        if (task) {
+            task.was.rejected(err);
+        }
+        return err;
     },
 };
 
@@ -281,6 +288,7 @@ function internalTask<T>(opts: {
             if (Tasks.debug) { log(self, "rejected", reason); }
         },
     };
+    self.error = (msg: string) => Tasks.error(self, msg);
     if (Tasks.debug) { log(self, "declared"); }
     return self;
 }
