@@ -78,7 +78,21 @@ var Tasks = {
         return lDebug;
     },
     set debug(value) {
-        lDebug = value;
+        if (value === true) {
+            lDebug = function (t) {
+                var args = [];
+                for (var _i = 1; _i < arguments.length; _i++) {
+                    args[_i - 1] = arguments[_i];
+                }
+                // tslint:disable:no-console
+                console.log(__spread([t ? t.fullname : ""], args.map(function (a) { return JSON.stringify(a); })).join()
+                    .replace(/\\"/g, "`")
+                    .replace(/"/g, "`"));
+            };
+        }
+        else {
+            lDebug = value;
+        }
     },
     declare: function (opts) {
         var j = internalTask(opts);

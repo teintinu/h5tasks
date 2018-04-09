@@ -46,8 +46,20 @@ const Tasks = {
     get debug() {
         return lDebug;
     },
-    set debug(value: typeof lDebug) {
-        lDebug = value;
+    set debug(value: true | typeof lDebug) {
+        if (value === true) {
+            lDebug = (t: undefined | ITask<any>, ...args: any[]) => {
+                // tslint:disable:no-console
+                console.log(
+                    [t ? t.fullname : "", ...args.map((a) => JSON.stringify(a))]
+                        .join()
+                        .replace(/\\"/g, "`")
+                        .replace(/"/g, "`"),
+                );
+            };
+        } else {
+            lDebug = value;
+        }
     },
     declare<T>(opts: {
         name: string,
