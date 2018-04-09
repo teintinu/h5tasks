@@ -46,8 +46,13 @@ const Tasks = {
     get debug() {
         return lDebug;
     },
-    set debug(value: true | typeof lDebug) {
-        if (value === true) {
+    disableDebug() {
+        lDebug = undefined;
+    },
+    enableDebug(value?: Debug) {
+        if (value) {
+            lDebug = value;
+        } else {
             lDebug = (t: undefined | ITask<any>, ...args: any[]) => {
                 // tslint:disable:no-console
                 console.log(
@@ -59,8 +64,6 @@ const Tasks = {
                         .replace(/"/g, "`"),
                 );
             };
-        } else {
-            lDebug = value;
         }
     },
     declare<T>(opts: {

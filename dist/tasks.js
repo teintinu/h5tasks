@@ -77,8 +77,14 @@ var Tasks = {
     get debug() {
         return lDebug;
     },
-    set debug(value) {
-        if (value === true) {
+    disableDebug: function () {
+        lDebug = undefined;
+    },
+    enableDebug: function (value) {
+        if (value) {
+            lDebug = value;
+        }
+        else {
             lDebug = function (t) {
                 var args = [];
                 for (var _i = 1; _i < arguments.length; _i++) {
@@ -89,9 +95,6 @@ var Tasks = {
                     .replace(/\\"/g, "`")
                     .replace(/"/g, "`"));
             };
-        }
-        else {
-            lDebug = value;
         }
     },
     declare: function (opts) {

@@ -1,7 +1,7 @@
 import Tasks, { ITask } from "./tasks";
 
 describe("task - simple ", () => {
-  beforeEach(() => Tasks.debug = undefined);
+  beforeEach(() => Tasks.disableDebug());
   it("task - simple", async () => {
     Tasks.reset();
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
@@ -51,12 +51,14 @@ describe("task - simple ", () => {
     Tasks.reset();
     const log: string[] = [];
     expect(Tasks.debug).toBeUndefined();
-    Tasks.debug = (t: undefined | ITask<any>, ...args: any[]) => {
+    Tasks.enableDebug((t: undefined | ITask<any>, ...args: any[]) => {
       log.push([t ? t.fullname : "", ...args].join());
-    };
+    });
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
     expect({ log1: log }).toEqual({ log1: [] });
-    Tasks.debug(undefined, "arg");
+    if (Tasks.debug) {
+      Tasks.debug(undefined, "arg");
+    }
     expect({ log2: log }).toEqual({ log2: [",arg"] });
     const task = Tasks.declare({
       name: "simple",
@@ -168,7 +170,7 @@ describe("task - simple ", () => {
     expect(Tasks.debug).toBeUndefined();
     const log: string[] = [];
     expect(Tasks.debug).toBeUndefined();
-    Tasks.debug = (t: undefined | ITask<any>, ...args: any[]) => {
+    Tasks.enableDebug((t: undefined | ITask<any>, ...args: any[]) => {
       log.push(
         [t ? t.fullname : "", ...args.map(
           (a) => a instanceof Error ? a.message : JSON.stringify(a),
@@ -177,7 +179,7 @@ describe("task - simple ", () => {
           .replace(/\\"/g, "`")
           .replace(/"/g, "`"),
       );
-    };
+    });
     Tasks.reset();
     expect({ log1: log }).toEqual({ log1: [] });
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });

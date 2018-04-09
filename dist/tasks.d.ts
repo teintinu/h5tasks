@@ -29,7 +29,9 @@ export declare type Debug = (task: undefined | ITask<any>, ...args: any[]) => vo
 declare const Tasks: {
     reset(): void;
     readonly list: ITask<any>[];
-    debug: true | Debug | undefined;
+    readonly debug: Debug | undefined;
+    disableDebug(): void;
+    enableDebug(value?: Debug | undefined): void;
     declare<T>(opts: {
         name: string;
         count?: number | undefined;
