@@ -51,7 +51,9 @@ const Tasks = {
             lDebug = (t: undefined | ITask<any>, ...args: any[]) => {
                 // tslint:disable:no-console
                 console.log(
-                    [t ? t.fullname : "", ...args.map((a) => JSON.stringify(a))]
+                    [t ? t.fullname : "", ...args.map(
+                        (a) => a instanceof Error ? (a.stack ? a.stack.toString() : a.message) : JSON.stringify(a),
+                    )]
                         .join()
                         .replace(/\\"/g, "`")
                         .replace(/"/g, "`"),
