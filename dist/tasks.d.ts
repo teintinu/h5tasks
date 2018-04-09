@@ -17,7 +17,6 @@ export interface ITask<T> extends Promise<T> {
         successed(res: T | Promise<T>): void;
         rejected(reason: Error): void;
     };
-    log(message: string, ...args: any[]): void;
     declare<C>(opts: {
         name: string;
         count?: number;
@@ -26,10 +25,11 @@ export interface ITask<T> extends Promise<T> {
     }): ITask<C>;
     error(msg: string): Error;
 }
+export declare type Debug = (task: undefined | ITask<any>, ...args: any[]) => void;
 declare const Tasks: {
-    debug: boolean;
     reset(): void;
     readonly list: ITask<any>[];
+    debug: Debug | undefined;
     declare<T>(opts: {
         name: string;
         count?: number | undefined;
@@ -43,7 +43,6 @@ declare const Tasks: {
     on: {
         error(callback: (err: Error) => void): void;
     };
-    log(message: string, ...args: any[]): void;
     asap(callback: () => void): void;
     delay(tm: number): Promise<{}>;
     error(task: ITask<any> | undefined, msg: string): Error;

@@ -21,7 +21,6 @@ export interface ITask<T> extends Promise<T> {
         successed(res: T | Promise<T>): void,
         rejected(reason: Error): void,
     };
-    log(message: string, ...args: any[]): void;
     declare<C>(opts: {
         name: string,
         count?: number,
@@ -31,14 +30,24 @@ export interface ITask<T> extends Promise<T> {
     error(msg: string): Error;
 }
 
+export type Debug =
+    (task: undefined | ITask<any>, ...args: any[]) => void;
+
+let lDebug: undefined | Debug;
+
 const Tasks = {
-    debug: false,
     reset() {
         rootTasks = [];
         events.error = [];
     },
     get list() {
         return [...rootTasks];
+    },
+    get debug() {
+        return lDebug;
+    },
+    set debug(value: typeof lDebug) {
+        lDebug = value;
     },
     declare<T>(opts: {
         name: string,
@@ -62,9 +71,6 @@ const Tasks = {
             const i = events.error.indexOf(callback);
             if (i === -1) { events.error.push(callback); }
         },
-    },
-    log(message: string, ...args: any[]) {
-        log(null, message, ...args);
     },
     asap(callback: () => void) {
         setTimeout(callback, 1);
@@ -138,7 +144,7 @@ function internalTask<T>(opts: {
                         rReason = rReason || c.reason;
                     } else { rChildrenPending.push(c); }
                 }
-                // if (Tasks.debug)
+                // if (lDebug)
                 //     log(self, JSON.stringify({
                 //         l: _children.length,
                 //         _childrenSuccess,
@@ -248,9 +254,6 @@ function internalTask<T>(opts: {
         },
     });
 
-    self.log = function self_log(message: string, ...args: any[]) {
-        log(self, message, ...args);
-    };
     self.declare = function self_declare<C>(cOpts: {
         name: string,
         count?: number,
@@ -272,7 +275,9 @@ function internalTask<T>(opts: {
             if (opts.parent && (!opts.parent.running)) {
                 opts.parent.was.started();
             }
-            if (Tasks.debug) { log(self, "started"); }
+            if (lDebug) {
+                lDebug(self, "started");
+            }
         },
         successed(res: T | Promise<T>): void {
             if (lState === 3) { throw new Error("was failed"); }
@@ -280,25 +285,15 @@ function internalTask<T>(opts: {
                 res.then(self.was.successed, self.was.rejected);
             } else {
                 tryResolve(res);
-                if (Tasks.debug) { log(self, "successed", JSON.stringify(res)); }
+                if (lDebug) { lDebug(self, "successed", JSON.stringify(res)); }
             }
         },
         rejected(reason: Error): void {
             tryReject(reason);
-            if (Tasks.debug) { log(self, "rejected", reason); }
+            if (lDebug) { lDebug(self, "rejected", reason); }
         },
     };
     self.error = (msg: string) => Tasks.error(self, msg);
-    if (Tasks.debug) { log(self, "declared"); }
+    if (lDebug) { lDebug(self, "declared"); }
     return self;
-}
-
-function log(task: ITask<any> | null, msg: string, ...args: any[]) {
-    if (task) {
-        // tslint:disable:no-console
-        console.log([task.fullname, msg, ...args].join(" "));
-    } else {
-        // tslint:disable:no-console
-        console.log([msg, ...args].join(" "));
-    }
 }

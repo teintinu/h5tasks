@@ -65,14 +65,20 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var lDebug;
 var Tasks = {
-    debug: false,
     reset: function () {
         rootTasks = [];
         events.error = [];
     },
     get list() {
         return __spread(rootTasks);
+    },
+    get debug() {
+        return lDebug;
+    },
+    set debug(value) {
+        lDebug = value;
     },
     declare: function (opts) {
         var j = internalTask(opts);
@@ -94,13 +100,6 @@ var Tasks = {
                 events.error.push(callback);
             }
         },
-    },
-    log: function (message) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        log.apply(void 0, __spread([null, message], args));
     },
     asap: function (callback) {
         setTimeout(callback, 1);
@@ -188,7 +187,7 @@ function internalTask(opts) {
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            // if (Tasks.debug)
+            // if (lDebug)
             //     log(self, JSON.stringify({
             //         l: _children.length,
             //         _childrenSuccess,
@@ -304,13 +303,6 @@ function internalTask(opts) {
             },
         },
     });
-    self.log = function self_log(message) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        log.apply(void 0, __spread([self, message], args));
-    };
     self.declare = function self_declare(cOpts) {
         var chield = internalTask({
             name: cOpts.name,
@@ -329,8 +321,8 @@ function internalTask(opts) {
             if (opts.parent && (!opts.parent.running)) {
                 opts.parent.was.started();
             }
-            if (Tasks.debug) {
-                log(self, "started");
+            if (lDebug) {
+                lDebug(self, "started");
             }
         },
         successed: function (res) {
@@ -342,36 +334,22 @@ function internalTask(opts) {
             }
             else {
                 tryResolve(res);
-                if (Tasks.debug) {
-                    log(self, "successed", JSON.stringify(res));
+                if (lDebug) {
+                    lDebug(self, "successed", JSON.stringify(res));
                 }
             }
         },
         rejected: function (reason) {
             tryReject(reason);
-            if (Tasks.debug) {
-                log(self, "rejected", reason);
+            if (lDebug) {
+                lDebug(self, "rejected", reason);
             }
         },
     };
     self.error = function (msg) { return Tasks.error(self, msg); };
-    if (Tasks.debug) {
-        log(self, "declared");
+    if (lDebug) {
+        lDebug(self, "declared");
     }
     return self;
-}
-function log(task, msg) {
-    var args = [];
-    for (var _i = 2; _i < arguments.length; _i++) {
-        args[_i - 2] = arguments[_i];
-    }
-    if (task) {
-        // tslint:disable:no-console
-        console.log(__spread([task.fullname, msg], args).join(" "));
-    }
-    else {
-        // tslint:disable:no-console
-        console.log(__spread([msg], args).join(" "));
-    }
 }
 //# sourceMappingURL=tasks.js.map

@@ -1,19 +1,16 @@
-import Tasks from "./tasks";
-
-// tslint:disable:object-literal-sort-keys
+import Tasks, { ITask } from "./tasks";
 
 describe("task - simple ", () => {
+  beforeEach(() => Tasks.debug = undefined);
   it("task - simple", async () => {
     Tasks.reset();
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
-    Tasks.log("log1", "arg");
     const task = Tasks.declare({
       name: "simple",
       resolver: async () => {
         return "ok";
       },
     });
-    task.log("log2", "arg");
     expect({
       depois1: Tasks.list.length,
       parent: task.parent,
@@ -50,8 +47,76 @@ describe("task - simple ", () => {
       failed: false,
     });
   });
+  it("task - debug", async () => {
+    Tasks.reset();
+    const log: string[] = [];
+    expect(Tasks.debug).toBeUndefined();
+    Tasks.debug = (t: undefined | ITask<any>, ...args: any[]) => {
+      log.push([t ? t.fullname : "", ...args].join());
+    };
+    expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
+    expect({ log1: log }).toEqual({ log1: [] });
+    Tasks.debug(undefined, "arg");
+    expect({ log2: log }).toEqual({ log2: [",arg"] });
+    const task = Tasks.declare({
+      name: "simple",
+      resolver: async () => {
+        return "ok";
+      },
+    });
+    expect({ log4: log }).toEqual({
+      log4: [
+        ",arg",
+        "simple,declared",
+      ],
+    });
+    expect({
+      depois1: Tasks.list.length,
+      parent: task.parent,
+      name: task.name,
+      fullname: task.fullname,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      depois1: 1,
+      parent: undefined,
+      name: "simple",
+      fullname: "simple",
+      pending: true,
+      running: false,
+      success: false,
+      failed: false,
+    });
+    const val = await task.then();
+    expect({
+      val,
+      depois2: Tasks.list.length,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      val: "ok",
+      depois2: 1,
+      pending: false,
+      running: false,
+      success: true,
+      failed: false,
+    });
+    expect({ log5: log }).toEqual({
+      log5: [
+        ",arg",
+        "simple,declared",
+        "simple,started",
+        "simple,successed,\"ok\"",
+      ],
+    });
+  });
 
   it("task - simple throw", async () => {
+    expect(Tasks.debug).toBeUndefined();
     Tasks.reset();
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
     const task = Tasks.declare({
