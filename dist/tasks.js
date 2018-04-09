@@ -85,7 +85,7 @@ var Tasks = {
                     args[_i - 1] = arguments[_i];
                 }
                 // tslint:disable:no-console
-                console.log(__spread([t ? t.fullname : ""], args.map(function (a) { return JSON.stringify(a); })).join()
+                console.log(__spread([t ? t.fullname : ""], args.map(function (a) { return a instanceof Error ? (a.stack ? a.stack.toString() : a.message) : JSON.stringify(a); })).join()
                     .replace(/\\"/g, "`")
                     .replace(/"/g, "`"));
             };

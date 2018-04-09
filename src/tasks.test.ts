@@ -162,6 +162,83 @@ describe("task - simple ", () => {
       failed: true,
     });
   });
+
+  it("task - debug throw", async () => {
+
+    expect(Tasks.debug).toBeUndefined();
+    const log: string[] = [];
+    expect(Tasks.debug).toBeUndefined();
+    Tasks.debug = (t: undefined | ITask<any>, ...args: any[]) => {
+      log.push(
+        [t ? t.fullname : "", ...args.map(
+          (a) => a instanceof Error ? a.message : JSON.stringify(a),
+        )]
+          .join()
+          .replace(/\\"/g, "`")
+          .replace(/"/g, "`"),
+      );
+    };
+    Tasks.reset();
+    expect({ log1: log }).toEqual({ log1: [] });
+    expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
+    const task = Tasks.declare({
+      name: "simple",
+      resolver() {
+        throw new Error("failed");
+      },
+    });
+    expect({ log2: log }).toEqual({
+      log2: [
+        "simple,`declared`",
+      ],
+    });
+    expect({
+      depois1: Tasks.list.length,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      depois1: 1,
+      pending: true,
+      running: false,
+      success: false,
+      failed: false,
+    });
+    let sucesso = false;
+    try {
+      await task.then();
+      sucesso = true;
+    } catch (e) {
+      expect({ message: Tasks.list[0].reason.message })
+        .toEqual({ message: e.message });
+    }
+    expect({
+      sucesso,
+      depois2: Tasks.list.length,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      sucesso: false,
+      depois2: 1,
+      pending: false,
+      running: false,
+      success: false,
+      failed: true,
+    });
+
+    expect({ log3: log }).toEqual({
+      log3: [
+        "simple,`declared`",
+        "simple,`started`",
+        "simple,`rejected`,failed",
+      ],
+    });
+
+  });
+
   it("task - simple error", async () => {
     Tasks.reset();
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });

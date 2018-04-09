@@ -1,6 +1,6 @@
 {
   "name": "@hoda5/tasks",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "UI tasks",
   "main": "dist/tasks.js",
   "types": "dist/tasks.d.ts",
@@ -55,7 +55,7 @@
     ],
     "coverageThreshold": {
       "global": {
-        "lines": 90
+        "lines": 88
       }
     },
     "collectCoverageFrom": [
