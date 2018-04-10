@@ -1,5 +1,5 @@
 export declare type Resolver<T> = (this: ITask<T>) => Promise<T>;
-export declare type AsyncDependencies<T> = (this: ITask<T>, res: T) => Promise<void>;
+export declare type AsyncDependencies<T> = (this: ITask<T>, res: T) => Promise<T>;
 export interface ITask<T> extends Promise<T> {
     readonly parent: ITask<any> | undefined;
     readonly children: Array<ITask<any>>;

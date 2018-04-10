@@ -2,7 +2,7 @@
 // tslint:disable:object-literal-sort-keys
 // tslint:disable:only-arrow-functions
 export type Resolver<T> = (this: ITask<T>) => Promise<T>;
-export type AsyncDependencies<T> = (this: ITask<T>, res: T) => Promise<void>;
+export type AsyncDependencies<T> = (this: ITask<T>, res: T) => Promise<T>;
 
 export interface ITask<T> extends Promise<T> {
     readonly parent: ITask<any> | undefined;
@@ -172,7 +172,10 @@ function internalTask<T>(opts: {
                     if (rReason) { tryReject(rReason); } else if (lState !== 3) {
                         if (opts.asyncDependencies && !noAsyncDeps) {
                             opts.asyncDependencies.call(self, res)
-                                .then(() => tryResolve(res, true), tryReject);
+                                .then(
+                                    (dres: T) => tryResolve(dres, true),
+                                    tryReject,
+                                );
                         } else {
                             lState = 2;
                             promResolve(res);

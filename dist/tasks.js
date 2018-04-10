@@ -218,7 +218,7 @@ function internalTask(opts) {
                 else if (lState !== 3) {
                     if (opts.asyncDependencies && !noAsyncDeps) {
                         opts.asyncDependencies.call(self, res)
-                            .then(function () { return tryResolve(res, true); }, tryReject);
+                            .then(function (dres) { return tryResolve(dres, true); }, tryReject);
                     }
                     else {
                         lState = 2;

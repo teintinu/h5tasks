@@ -47,6 +47,54 @@ describe("task - simple ", () => {
       failed: false,
     });
   });
+  it("task - asyncDependencies", async () => {
+    Tasks.reset();
+    expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
+    const task = Tasks.declare({
+      name: "asyncDependencies",
+      resolver: async () => {
+        return "ok";
+      },
+      async asyncDependencies(v) {
+        return v + "x";
+      },
+    });
+    expect({
+      depois1: Tasks.list.length,
+      parent: task.parent,
+      name: task.name,
+      fullname: task.fullname,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      depois1: 1,
+      parent: undefined,
+      name: "asyncDependencies",
+      fullname: "asyncDependencies",
+      pending: true,
+      running: false,
+      success: false,
+      failed: false,
+    });
+    const val = await task.then();
+    expect({
+      val,
+      depois2: Tasks.list.length,
+      pending: Tasks.list[0].pending,
+      running: Tasks.list[0].running,
+      success: Tasks.list[0].success,
+      failed: Tasks.list[0].failed,
+    }).toEqual({
+      val: "okx",
+      depois2: 1,
+      pending: false,
+      running: false,
+      success: true,
+      failed: false,
+    });
+  });
   it("task - debug", async () => {
     Tasks.reset();
     const log: string[] = [];
