@@ -5,10 +5,13 @@ describe("task - simple ", () => {
   it("task - simple", async () => {
     Tasks.reset();
     expect({ antes: Tasks.list.length }).toEqual({ antes: 0 });
-    const task = Tasks.declare({
+    const task = Tasks.declare<string>({
       name: "simple",
-      resolver: async () => {
-        return "ok";
+      resolver: async (taskobj) => {
+        if (taskobj === task) {
+          return "ok";
+        }
+        return "err";
       },
     });
     expect({

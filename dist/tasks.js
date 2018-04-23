@@ -246,7 +246,7 @@ function internalTask(opts) {
                 if (opts.resolver) {
                     try {
                         self.was.started();
-                        var res = opts.resolver.call(self);
+                        var res = opts.resolver.call(null, self);
                         self.was.successed(res);
                     }
                     catch (e) {

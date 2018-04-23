@@ -1,6 +1,6 @@
 {
   "name": "@hoda5/tasks",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "UI tasks",
   "main": "dist/tasks.js",
   "types": "dist/tasks.d.ts",
